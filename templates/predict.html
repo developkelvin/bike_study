@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>수요예측</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDiiw1KijBCm8nDFjmpHhEEE6ow4pQa_7I"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <style>
+        h1 {
+            font-size: 2em !important;
+        }
+
+        html,
+        body,
+        #map_view {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* nav .navbar{
+            font-sty
+        } */
+
+        #map_view {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body onload="initialize()">
+    <nav class="navbar navbar-dark bg-dark">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="#">개별연구</a>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">대여소위치
+                        <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">대여기록조회</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/predict">수요예측</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+    </nav>
+    <div id="map_view"></div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script>
+        function initialize() {
+            var newmarker;
+
+
+            var Y_point = 37.54260; // latitude
+            var X_point = 126.9990; // longitude
+            var zoomLevel = 12.5; // 첫 로딩시 보일 지도의 확대 레벨
+            var markerTitle = "수요를 예측하고자 하는 지점"; // 현재 위치 마커에 마우스를 올렸을때 나타나는 이름
+            var markerMaxWidth = 300; // 마커를 클릭했을때 나타나는 말풍선의 최대 크기
+
+            var myLatlng = new google.maps.LatLng(Y_point, X_point);
+            var mapOptions = {
+                zoom: zoomLevel,
+                center: myLatlng,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            }
+            var map = new google.maps.Map(document.getElementById('map_view'), mapOptions);
+
+            
+
+            map.addListener("click", function (event) {
+                var latitude = event.latLng.lat();
+                var longitude = event.latLng.lng();
+                var predicted_value = 0;
+                var nearest_station = '';
+                var nearest_dong = '';
+                
+
+                console.log(latitude + ', ' + longitude);
+
+                var markerTitle = "수요를 예측하고자 하는 지점"
+                //ajax로 lat, lng 데이터 보내고 marker와 marker 텍스트 삽입하기
+                var myLatlng = new google.maps.LatLng(latitude, longitude);
+                var predictPoint = new google.maps.Marker({
+                    position: myLatlng,
+                    draggable: false,
+                    map: map,
+                    title: markerTitle,
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                });
+
+                $.ajax({
+                    url: "/predictProcess?lat=" + latitude + "&lng=" + longitude,
+
+                    datatype: "json",
+                    type: "GET",
+                    success: function (data, status, xhttp) {
+                        console.log(data)
+                        predicted_value = data.predicted_value;
+                        nearest_dong = data.nearest_dong;
+                        nearest_station = data.nearest_station;
+
+                        var contentString = '<div id="content">' +
+                    '<div id="siteNotice">' +
+                    '</div>' +
+                    '<h1 id="firstHeading" class="firstHeading">수요 예측</h1>' +
+                    '<div id="bodyContent">' +
+                    '<p>따릉이 대여소의 수요를 예측하려는 지점이다.</p>' +
+                    '<p>예상 연간 대여대수 : ' + data.predicted_value + '</p>' +
+                    '<p>최근접 동 : ' + data.nearest_dong + '</p>' +
+                    '<p>최근접 지하철 역 :' + data.nearest_station + '역</p>' +
+                    '</div>' +
+                    '</div>'
+
+                var infowindow = new google.maps.InfoWindow({
+                    content: contentString,
+                    maxWidth: markerMaxWidth
+                });
+
+                google.maps.event.addListener(predictPoint, 'click', function () {
+                infowindow.open(map, predictPoint);
+            });
+
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        alert(textStatus);
+                    }
+                });
+
+                
+
+                // // Center of map
+                // map.panTo(new google.maps.LatLng(latitude, longitude));
+
+            }); //end addListener
+
+
+
+
+
+
+
+
+            
+
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>따릉이 대여소 위치</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDiiw1KijBCm8nDFjmpHhEEE6ow4pQa_7I"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+    <style>
+        h1 {
+            font-size: 2em !important;
+        }
+
+        html,
+        body,
+        #map_view {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* nav .navbar{
+            font-sty
+        } */
+
+        #map_view {
+            position: relative;
+        }
+    </style>
+</head>
+
+<body onload="initialize()">
+    <nav class="navbar navbar-dark bg-dark">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="#">개별연구</a>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">대여소위치
+                        <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">대여기록조회</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/predict">수요예측</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+    </nav>
+    <div id="map_view"></div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script>
+        function initialize() {
+            var newmarker;
+
+            $.ajax({
+                url: "/latlng",
+
+                datatype: "json",
+                type: "GET",
+                success: function (data, status, xhttp) {
+                    for (var i = 0; i < data.length; i++) {
+                        var loc = new google.maps.LatLng(data[i].latitude, data[i].longitude);
+                        newmarker = new google.maps.Marker({
+                            position: loc,
+                            draggable: false,
+                            map: map,
+                            title: data[i].office_name,
+                            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                        });
+
+                        // This doesn't seem to work
+                        // newmarker.hotspotid = data[i].ID;
+                        // google.maps.event.addListener(newmarker, "click", function (mark) {
+                        //     alert(mark.hotspotid);
+                        // });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(textStatus);
+                }
+            });
+            var Y_point = 37.54260; // latitude
+            var X_point = 126.9990; // longitude
+            var zoomLevel = 12.5; // 첫 로딩시 보일 지도의 확대 레벨
+            var markerTitle = "수요를 예측하고자 하는 지점"; // 현재 위치 마커에 마우스를 올렸을때 나타나는 이름
+            var markerMaxWidth = 300; // 마커를 클릭했을때 나타나는 말풍선의 최대 크기
+
+            var myLatlng = new google.maps.LatLng(Y_point, X_point);
+            var mapOptions = {
+                zoom: zoomLevel,
+                center: myLatlng,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            }
+            var map = new google.maps.Map(document.getElementById('map_view'), mapOptions);
+
+            // google.maps.event.addListener(newmarker, 'click', function () {
+            //     infowindow.open(map, newmarker);
+            // });
+        }
+    </script>
+</body>
+
+</html>
