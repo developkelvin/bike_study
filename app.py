@@ -30,18 +30,20 @@ def predict_procee():
     station_distance = 999999
     rental_distance = 999999
 
-    get_dong_info_sql = "select average_age, work_density, dong_name, sqrt(pow(lat-"+lat+",2)+pow(lng-"+lng+",2)) 'distance' from dong_info order by distance limit 1"
-    get_station_distance_sql = "select *, sqrt(pow(stat_lat-"+lat+",2)+pow(stat_lng-"+lng+",2)) 'distance' from station_info order by distance limit 1"
-    get_rent_distance_sql = "select *, sqrt(pow(rent_lat-"+lat+",2)+pow(rent_lng-"+lng+",2)) 'distance' from rental_center_info order by distance limit 1"
+    #get_dong_info_sql = "select average_age, work_density, dong_name, sqrt(pow(lat-"+lat+",2)+pow(lng-"+lng+",2)) 'distance' from dong_info order by distance limit 1"
+    get_dong_info_sql = "select average_age, work_density, dong_name, (6370*acos(cos(radians("+lat+"))*cos(radians(lat))*cos(radians(lng)-radians("+lng+"))+sin(radians("+lat+"))*sin(radians(lat)))) 'distance',sqrt(pow(lat-"+lat+",2)+pow(lng-"+lng+",2)) 'standard' from dong_info order by distance limit 1"
+    get_station_distance_sql = "select *, (6370*acos(cos(radians("+lat+"))*cos(radians(stat_lat))*cos(radians(stat_lng)-radians("+lng+"))+sin(radians("+lat+"))*sin(radians(stat_lat)))) 'distance',sqrt(pow(stat_lat-"+lat+",2)+pow(stat_lng-"+lng+",2)) 'standard' from station_info order by distance limit 1"
+    get_rent_distance_sql = "select *, (6370*acos(cos(radians("+lat+"))*cos(radians(rent_lat))*cos(radians(rent_lng)-radians("+lng+"))+sin(radians("+lat+"))*sin(radians(rent_lat)))) 'distance' from rental_center_info order by distance limit 1"
     
     result = ""
-    try:
-        conn = pymysql.connect(host=DB_URL,
+    conn = pymysql.connect(host=DB_URL,
                              user=DB_USER,
                              password=DB_PASSWORD,
                              db=DB_SCHEMA,
                              charset='utf8',
                              cursorclass=pymysql.cursors.DictCursor)
+    try:
+       
         with conn.cursor() as cursor:
             cursor.execute(get_dong_info_sql)
             result = cursor.fetchall()
@@ -60,8 +62,7 @@ def predict_procee():
         conn.close()
     
     predicted_value = 147.780739-0.026132*float(rental_distance*1000)-1.099247*float(average_age) -  0.024414*sqrt(work_density) - 0.99423*station_distance*1000
-    
-    result_data = {"average_age":average_age, "work_density":work_density, "station_distance":station_distance, "rental_distance":rental_distance, 
+    result_data = {"average_age":average_age, "work_density":work_density, "station_distance":round(station_distance*1000,2), "rental_distance":rental_distance, 
     "nearest_dong":nearest_dong, "nearest_station":nearest_station, "predicted_value":round(predicted_value*predicted_value)}
     
     return jsonify(result_data)
@@ -71,13 +72,14 @@ def get_latlng():
      #get all latlng
      #later, using parameter to get few locations
     result = ""
-    try:
-        conn = pymysql.connect(host=DB_URL,
+    conn = pymysql.connect(host=DB_URL,
                              user=DB_USER,
                              password=DB_PASSWORD,
                              db=DB_SCHEMA,
                              charset='utf8',
                              cursorclass=pymysql.cursors.DictCursor)
+    try:
+        
         with conn.cursor() as cursor:
             sql = 'SELECT office_name, latitude, longitude FROM rental_office_info'
             cursor.execute(sql)

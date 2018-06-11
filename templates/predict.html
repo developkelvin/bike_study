@@ -125,10 +125,11 @@
                     '</div>' +
                     '<h1 id="firstHeading" class="firstHeading">수요 예측</h1>' +
                     '<div id="bodyContent">' +
-                    '<p>따릉이 대여소의 수요를 예측하려는 지점이다.</p>' +
                     '<p>예상 연간 대여대수 : ' + data.predicted_value + '</p>' +
                     '<p>최근접 동 : ' + data.nearest_dong + '</p>' +
                     '<p>최근접 지하철 역 :' + data.nearest_station + '역</p>' +
+                    '<p>위도 : ' + latitude + '</p>' +
+                    '<p>경도 : ' + longitude + '</p>' +
                     '</div>' +
                     '</div>'
 
@@ -147,21 +148,10 @@
                     }
                 });
 
-                
-
                 // // Center of map
                 // map.panTo(new google.maps.LatLng(latitude, longitude));
 
             }); //end addListener
-
-
-
-
-
-
-
-
-            
 
         }
     </script>
